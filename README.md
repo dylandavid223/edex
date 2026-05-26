@@ -1,166 +1,297 @@
-<p align="center">
-  <br>
-  <img alt="Logo" src="media/logo.png">
-  <br><br>
-  <a href="https://lgtm.com/projects/g/GitSquared/edex-ui/context:javascript"><img alt="undefined" src="https://img.shields.io/lgtm/grade/javascript/g/GitSquared/edex-ui.svg?logo=lgtm&logoWidth=18"/></a>
-  <br>
-  <a href="https://github.com/GitSquared/edex-ui/releases/latest"><img alt="undefined" src="https://img.shields.io/github/release/GitSquared/edex-ui.svg?style=popout"></a>
-  <a href="#featured-in"><img alt="undefined" src="https://img.shields.io/github/downloads/GitSquared/edex-ui/total.svg?style=popout"></a>
-  <a href="https://github.com/GitSquared/edex-ui/blob/master/LICENSE"><img alt="undefined" src="https://img.shields.io/github/license/GitSquared/edex-ui.svg?style=popout"></a>
-  <br>
-  <a href="https://github.com/GitSquared/edex-ui/releases/download/v2.2.8/eDEX-UI-Windows.exe" target="_blank"><img alt="undefined" src="https://badgen.net/badge/Download/Windows/?color=blue&icon=windows&label"></a>
-  <a href="https://github.com/GitSquared/edex-ui/releases/download/v2.2.8/eDEX-UI-macOS.dmg" target="_blank"><img alt="undefined" src="https://badgen.net/badge/Download/macOS/?color=grey&icon=apple&label"></a>
-  <a href="https://github.com/GitSquared/edex-ui/releases/download/v2.2.8/eDEX-UI-Linux-x86_64.AppImage" target="_blank"><img alt="undefined" src="https://badgen.net/badge/Download/Linux64/?color=orange&icon=terminal&label"></a>
-  <a href="https://github.com/GitSquared/edex-ui/releases/download/v2.2.8/eDEX-UI-Linux-arm64-AppImage" target="_blank"><img alt="undefined" src="https://badgen.net/badge/Download/LinuxArm64/?color=orange&icon=terminal&label"></a>
-  <a href="https://aur.archlinux.org/packages/edex-ui" target="_blank"><img alt="undefined" src="https://badgen.net/badge/AUR/Package/cyan"></a>
-  <br>
-  <a href="https://github.com/GitSquared/edex-ui/releases/tag/v2.2.8"><strong><i>(Project archived oct. 18th 2021)</i></strong></a>
-  <br><br><br>
-</p>
+# Argon2
 
-eDEX-UI is a fullscreen, cross-platform terminal emulator and system monitor that looks and feels like a sci-fi computer interface.
+[![Build Status](https://travis-ci.org/P-H-C/phc-winner-argon2.svg?branch=master)](https://travis-ci.org/P-H-C/phc-winner-argon2)
+[![Build status](https://ci.appveyor.com/api/projects/status/8nfwuwq55sgfkele?svg=true)](https://ci.appveyor.com/project/P-H-C/phc-winner-argon2)
+[![codecov.io](https://codecov.io/github/P-H-C/phc-winner-argon2/coverage.svg?branch=master)](https://codecov.io/github/P-H-C/phc-winner-argon2?branch=master)
 
----
+This is the reference C implementation of Argon2, the password-hashing
+function that won the [Password Hashing Competition
+(PHC)](https://password-hashing.net).
 
-<a href="https://youtu.be/BGeY1rK19zA">
-  <img align="right" width="400" alt="Demo on YouTube" src="media/youtube-demo-teaser.gif">
-</a>
+Argon2 is a password-hashing function that summarizes the state of the
+art in the design of memory-hard functions and can be used to hash
+passwords for credential storage, key derivation, or other applications.
 
-Heavily inspired from the [TRON Legacy movie effects](https://web.archive.org/web/20170511000410/http://jtnimoy.com/blogs/projects/14881671) (especially the [Board Room sequence](https://gmunk.com/TRON-Board-Room)), the eDEX-UI project was originally meant to be *"[DEX-UI](https://github.com/seenaburns/dex-ui) with less « art » and more « distributable software »"*.
+It has a simple design aimed at the highest memory filling rate and
+effective use of multiple computing units, while still providing defense
+against tradeoff attacks (by exploiting the cache and memory organization
+of the recent processors).
 
-While keeping a futuristic look and feel, it strives to maintain a certain level of functionality and to be usable in real-life scenarios, with the larger goal of bringing science-fiction UXs to the mainstream.
+Argon2 has three variants: Argon2i, Argon2d, and Argon2id. Argon2d is faster
+and uses data-depending memory access, which makes it highly resistant
+against GPU cracking attacks and suitable for applications with no threats
+from side-channel timing attacks (eg. cryptocurrencies). Argon2i instead
+uses data-independent memory access, which is preferred for password
+hashing and password-based key derivation, but it is slower as it makes
+more passes over the memory to protect from tradeoff attacks. Argon2id is a
+hybrid of Argon2i and Argon2d, using a combination of data-depending and
+data-independent memory accesses, which gives some of Argon2i's resistance to
+side-channel cache timing attacks and much of Argon2d's resistance to GPU
+cracking attacks.
 
-<br>
+Argon2i, Argon2d, and Argon2id are parametrized by:
 
-It might or might not be a joke taken too seriously.
+* A **time** cost, which defines the amount of computation realized and
+  therefore the execution time, given in number of iterations
+* A **memory** cost, which defines the memory usage, given in kibibytes
+* A **parallelism** degree, which defines the number of parallel threads
+
+The [Argon2 document](argon2-specs.pdf) gives detailed specs and design
+rationale.
+
+Please report bugs as issues on this repository.
+
+## Usage
+
+`make` builds the executable `argon2`, the static library `libargon2.a`,
+and the shared library `libargon2.so` (or `libargon2.dylib` on OSX).
+Make sure to run `make test` to verify that your build produces valid
+results. `make install PREFIX=/usr` installs it to your system.
+
+### Command-line utility
+
+`argon2` is a command-line utility to test specific Argon2 instances
+on your system. To show usage instructions, run
+`./argon2 -h` as
+```
+Usage:  ./argon2 [-h] salt [-i|-d|-id] [-t iterations] [-m memory] [-p parallelism] [-l hash length] [-e|-r] [-v (10|13)]
+        Password is read from stdin
+Parameters:
+        salt            The salt to use, at least 8 characters
+        -i              Use Argon2i (this is the default)
+        -d              Use Argon2d instead of Argon2i
+        -id             Use Argon2id instead of Argon2i
+        -t N            Sets the number of iterations to N (default = 3)
+        -m N            Sets the memory usage of 2^N KiB (default 12)
+        -p N            Sets parallelism to N threads (default 1)
+        -l N            Sets hash output length to N bytes (default 32)
+        -e              Output only encoded hash
+        -r              Output only the raw bytes of the hash
+        -v (10|13)      Argon2 version (defaults to the most recent version, currently 13)
+        -h              Print argon2 usage
+```
+For example, to hash "password" using "somesalt" as a salt and doing 2
+iterations, consuming 64 MiB, using four parallel threads and an output hash
+of 24 bytes
+```
+$ echo -n "password" | ./argon2 somesalt -t 2 -m 16 -p 4 -l 24
+Type:           Argon2i
+Iterations:     2
+Memory:         65536 KiB
+Parallelism:    4
+Hash:           45d7ac72e76f242b20b77b9bf9bf9d5915894e669a24e6c6
+Encoded:        $argon2i$v=19$m=65536,t=2,p=4$c29tZXNhbHQ$RdescudvJCsgt3ub+b+dWRWJTmaaJObG
+0.188 seconds
+Verification ok
+```
+
+### Library
+
+`libargon2` provides an API to both low-level and high-level functions
+for using Argon2.
+
+The example program below hashes the string "password" with Argon2i
+using the high-level API and then using the low-level API. While the
+high-level API takes the three cost parameters (time, memory, and
+parallelism), the password input buffer, the salt input buffer, and the
+output buffers, the low-level API takes in these and additional parameters
+, as defined in [`include/argon2.h`](include/argon2.h).
+
+There are many additional parameters, but we will highlight three of them here.
+
+1. The `secret` parameter, which is used for [keyed hashing](
+   https://en.wikipedia.org/wiki/Hash-based_message_authentication_code).
+   This allows a secret key to be input at hashing time (from some external
+   location) and be folded into the value of the hash. This means that even if
+   your salts and hashes are compromized, an attacker cannot brute-force to find
+   the password without the key.
+
+2. The `ad` parameter, which is used to fold any additional data into the hash
+   value. Functionally, this behaves almost exactly like the `secret` or `salt`
+   parameters; the `ad` parameter is folding into the value of the hash.
+   However, this parameter is used for different data. The `salt` should be a
+   random string stored alongside your password. The `secret` should be a random
+   key only usable at hashing time. The `ad` is for any other data.
+
+3. The `flags` parameter, which determines which memory should be securely
+   erased. This is useful if you want to securly delete the `pwd` or `secret`
+   fields right after they are used. To do this set `flags` to either
+   `ARGON2_FLAG_CLEAR_PASSWORD` or `ARGON2_FLAG_CLEAR_SECRET`. To change how
+   internal memory is cleared, change the global flag
+   `FLAG_clear_internal_memory` (defaults to clearing internal memory).
+
+Here the time cost `t_cost` is set to 2 iterations, the
+memory cost `m_cost` is set to 2<sup>16</sup> kibibytes (64 mebibytes),
+and parallelism is set to 1 (single-thread).
+
+Compile for example as `gcc test.c libargon2.a -Isrc -o test`, if the program
+below is named `test.c` and placed in the project's root directory.
+
+```c
+#include "argon2.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define HASHLEN 32
+#define SALTLEN 16
+#define PWD "password"
+
+int main(void)
+{
+    uint8_t hash1[HASHLEN];
+    uint8_t hash2[HASHLEN];
+
+    uint8_t salt[SALTLEN];
+    memset( salt, 0x00, SALTLEN );
+
+    uint8_t *pwd = (uint8_t *)strdup(PWD);
+    uint32_t pwdlen = strlen((char *)pwd);
+
+    uint32_t t_cost = 2;            // 1-pass computation
+    uint32_t m_cost = (1<<16);      // 64 mebibytes memory usage
+    uint32_t parallelism = 1;       // number of threads and lanes
+
+    // high-level API
+    argon2i_hash_raw(t_cost, m_cost, parallelism, pwd, pwdlen, salt, SALTLEN, hash1, HASHLEN);
+
+    // low-level API
+    argon2_context context = {
+        hash2,  /* output array, at least HASHLEN in size */
+        HASHLEN, /* digest length */
+        pwd, /* password array */
+        pwdlen, /* password length */
+        salt,  /* salt array */
+        SALTLEN, /* salt length */
+        NULL, 0, /* optional secret data */
+        NULL, 0, /* optional associated data */
+        t_cost, m_cost, parallelism, parallelism,
+        ARGON2_VERSION_13, /* algorithm version */
+        NULL, NULL, /* custom memory allocation / deallocation functions */
+        /* by default only internal memory is cleared (pwd is not wiped) */
+        ARGON2_DEFAULT_FLAGS
+    };
+
+    int rc = argon2i_ctx( &context );
+    if(ARGON2_OK != rc) {
+        printf("Error: %s\n", argon2_error_message(rc));
+        exit(1);
+    }
+    free(pwd);
+
+    for( int i=0; i<HASHLEN; ++i ) printf( "%02x", hash1[i] ); printf( "\n" );
+    if (memcmp(hash1, hash2, HASHLEN)) {
+        for( int i=0; i<HASHLEN; ++i ) {
+            printf( "%02x", hash2[i] );
+        }
+        printf("\nfail\n");
+    }
+    else printf("ok\n");
+    return 0;
+}
+```
+
+To use Argon2d instead of Argon2i call `argon2d_hash_raw` instead of
+`argon2i_hash_raw` using the high-level API, and `argon2d` instead of
+`argon2i` using the low-level API. Similarly for Argon2id, call `argon2id_hash_raw`
+and `argon2id`.
+
+To produce the crypt-like encoding rather than the raw hash, call
+`argon2i_hash_encoded` for Argon2i, `argon2d_hash_encoded` for Argon2d, and
+`argon2id_hash_encoded` for Argon2id
+
+See [`include/argon2.h`](include/argon2.h) for API details.
+
+*Note: in this example the salt is set to the all-`0x00` string for the
+sake of simplicity, but in your application you should use a random salt.*
 
 
----
+### Benchmarks
 
-<p align="center">
-  <em>Jump to: <br><a href="#features">Features</a> — <a href="#screenshots">Screenshots</a> — <a href="#qa">Questions & Answers</a> — <strong><a href="#how-do-i-get-it">Download</a></strong> — <a href="#featured-in">Featured In</a> — <a href="#useful-commands-for-the-nerds">Contributor Instructions</a> — <a href="#credits">Credits</a></em>
-</p>
+`make bench` creates the executable `bench`, which measures the execution
+time of various Argon2 instances:
 
-## Sponsor
+```
+$ ./bench
+Argon2d 1 iterations  1 MiB 1 threads:  5.91 cpb 5.91 Mcycles
+Argon2i 1 iterations  1 MiB 1 threads:  4.64 cpb 4.64 Mcycles
+0.0041 seconds
 
-**Want to help support my open-source experiments and learn some cool JavaScript tricks at the same time?**
+Argon2d 1 iterations  1 MiB 2 threads:  2.76 cpb 2.76 Mcycles
+Argon2i 1 iterations  1 MiB 2 threads:  2.87 cpb 2.87 Mcycles
+0.0038 seconds
 
-Click the banner below and sign up to **Bytes**, the only newsletter cool enough to be recommended by eDEX-UI.
+Argon2d 1 iterations  1 MiB 4 threads:  3.25 cpb 3.25 Mcycles
+Argon2i 1 iterations  1 MiB 4 threads:  3.57 cpb 3.57 Mcycles
+0.0048 seconds
 
-[![Bytes by UI.dev](media/sponsor-uidev-bytes.jpg)](https://ui.dev/bytes/?r=gabriel)
+(...)
 
-## Features
-- Fully featured terminal emulator with tabs, colors, mouse events, and support for `curses` and `curses`-like applications.
-- Real-time system (CPU, RAM, swap, processes) and network (GeoIP, active connections, transfer rates) monitoring.
-- Full support for touch-enabled displays, including an on-screen keyboard.
-- Directory viewer that follows the CWD (current working directory) of the terminal.
-- Advanced customization using themes, on-screen keyboard layouts, CSS injections. See the [wiki](https://github.com/GitSquared/edex-ui/wiki) for more info.
-- Optional sound effects made by a talented sound designer for maximum hollywood hacking vibe.
+Argon2d 1 iterations  4096 MiB 2 threads:  2.15 cpb 8788.08 Mcycles
+Argon2i 1 iterations  4096 MiB 2 threads:  2.15 cpb 8821.59 Mcycles
+13.0112 seconds
 
-## Screenshots
-![Default screenshot](media/screenshot_default.png)
+Argon2d 1 iterations  4096 MiB 4 threads:  1.79 cpb 7343.72 Mcycles
+Argon2i 1 iterations  4096 MiB 4 threads:  2.72 cpb 11124.86 Mcycles
+19.3974 seconds
 
-_[neofetch](https://github.com/dylanaraps/neofetch) on eDEX-UI 2.2 with the default "tron" theme & QWERTY keyboard_
+(...)
+```
 
-![Blade screenshot](media/screenshot_blade.png)
+## Bindings
 
-_Checking out available themes in [eDEX's config dir](https://github.com/GitSquared/edex-ui/wiki/userData) with [`ranger`](https://github.com/ranger/ranger) on eDEX-UI 2.2 with the "blade" theme_
+Bindings are available for the following languages (make sure to read
+their documentation):
 
-![Disrupted screenshot](media/screenshot_disrupted.png)
-
-_[cmatrix](https://github.com/abishekvashok/cmatrix) on eDEX-UI 2.2 with the experimental "tron-disrupted" theme, and the user-contributed DVORAK keyboard_
-
-![Horizon screenshot](media/screenshot_horizon.png)
-
-_Editing eDEX-UI source code with `nvim` on eDEX-UI 2.2 with the custom [`horizon-full`](https://github.com/GitSquared/horizon-edex-theme) theme_
-
-## Q&A
-#### How do I get it?
-Click on the little badges under the eDEX logo at the top of this page, or go to the [Releases](https://github.com/GitSquared/edex-ui/releases) tab, or download it through [one of the available repositories](https://repology.org/project/edex-ui/versions) (Homebrew, AUR...).
-
-Public release binaries are unsigned ([why](https://gaby.dev/posts/code-signing)). On Linux, you will need to `chmod +x` the AppImage file in order to run it.
-#### I have a problem!
-Search through the [Issues](https://github.com/GitSquared/edex-ui/issues) to see if yours has already been reported. If you're confident it hasn't been reported yet, feel free to open up a new one. If you see your issue and it's been closed, it probably means that the fix for it will ship in the next version, and you'll have to wait a bit.
-#### Can you disable the keyboard/the filesystem display?
-You can't disable them (yet) but you can hide them. See the `tron-notype` theme.
-#### Why is the file browser saying that "Tracking Failed"? (Windows only)
-On Linux and macOS, eDEX tracks where you're going in your terminal tab to display the content of the current folder on-screen.
-Sadly, this is technically impossible to do on Windows right now, so the file browser reverts back to a "detached" mode. You can still use it to browse files & directories and click on files to input their path in the terminal.
-#### Can this run on a Raspberry Pi / ARM device?
-We provide prebuilt arm64 builds. For other platforms, see [this issue comment](https://github.com/GitSquared/edex-ui/issues/313#issuecomment-443465345), and the thread on issue [#818](https://github.com/GitSquared/edex-ui/issues/818).
-#### Is this repo actively maintained?
-No, after a 3 years run, this project has been archived. See the [announcement](https://github.com/GitSquared/edex-ui/releases/tag/v2.2.8).
-#### How did you make this?
-Glad you're interested! See [#272](https://github.com/GitSquared/edex-ui/issues/272).
-#### This is so cool.
-Thanks! If you feel like it, you can [follow me on Twitter](https://gaby.dev/twitter) to hear about new stuff I'm making.
-
-<img width="220" src="https://78.media.tumblr.com/35d4ef4447e0112f776b629bffd99188/tumblr_mk4gf8zvyC1s567uwo1_500.gif" />
-
-
-## Featured in...
-- [Linux Uprising Blog](https://www.linuxuprising.com/2018/11/edex-ui-fully-functioning-sci-fi.html)
-- [My post on r/unixporn](https://www.reddit.com/r/unixporn/comments/9ysbx7/oc_a_little_project_that_ive_been_working_on/)
-- [Korben article (in french)](https://korben.info/une-interface-futuriste-pour-vos-ecrans-tactiles.html)
-- [Hacker News](https://news.ycombinator.com/item?id=18509828)
-- [This tweet that made me smile](https://twitter.com/mikemaccana/status/1065615451940667396)
-- [BoingBoing article](https://boingboing.net/2018/11/23/simulacrum-sf.html) - Apparently i'm a "French hacker"
-- [OReilly 4 short links](https://www.oreilly.com/ideas/four-short-links-23-november-2018)
-- [Hackaday](https://hackaday.com/2018/11/23/look-like-a-movie-hacker/)
-- [Developpez.com (another french link)](https://www.developpez.com/actu/234808/Une-application-de-bureau-ressemble-a-une-interface-d-ordinateur-de-science-fiction-inspiree-des-effets-du-film-TRON-Legacy/)
-- [GitHub Blog's Release Radar November 2018](https://blog.github.com/2018-12-21-release-radar-november-2018/)
-- [opensource.com Productive Tools for 2019](https://opensource.com/article/19/1/productivity-tool-edex-ui)
-- [O'Reilly 4 short links (again)](https://www.oreilly.com/radar/four-short-links-7-july-2020/)
-- [LinuxLinks](https://www.linuxlinks.com/linux-candy-edex-ui-sci-fi-computer-terminal-emulator-system-monitor/)
-- [Linux For Everyone (Youtube)](https://www.youtube.com/watch?v=gbzqCAjm--g)
-- [BestOfJS Rising Stars 2020](https://risingstars.js.org/2020/en#edex-ui)
-- [The Geek Freaks (Youtube/German)](https://youtu.be/TSjMIeLG0Sk)
-- [JSNation Open Source Awards 2021](https://osawards.com/javascript/#nominees) (Nominee - Fun Side Project of the Year)
+* [Elixir](https://github.com/riverrun/argon2_elixir) by [@riverrun](https://github.com/riverrun)
+* [Erlang](https://github.com/ergenius/eargon2) by [@ergenius](https://github.com/ergenius)
+* [Go](https://github.com/tvdburgt/go-argon2) by [@tvdburgt](https://github.com/tvdburgt)
+* [Haskell](https://hackage.haskell.org/package/argon2) by [@hvr](https://github.com/hvr)
+* [JavaScript (native)](https://github.com/ranisalt/node-argon2), by [@ranisalt](https://github.com/ranisalt)
+* [JavaScript (native)](https://github.com/jdconley/argon2themax), by [@jdconley](https://github.com/jdconley)
+* [JavaScript (ffi)](https://github.com/cjlarose/argon2-ffi), by [@cjlarose](https://github.com/cjlarose)
+* [JavaScript (browser)](https://github.com/antelle/argon2-browser), by [@antelle](https://github.com/antelle)
+* [JVM](https://github.com/phxql/argon2-jvm) by [@phXql](https://github.com/phxql)
+* [JVM (with keyed hashing)](https://github.com/kosprov/jargon2-api) by [@kosprov](https://github.com/kosprov)
+* [Lua (native)](https://github.com/thibaultCha/lua-argon2) by [@thibaultCha](https://github.com/thibaultCha)
+* [Lua (ffi)](https://github.com/thibaultCha/lua-argon2-ffi) by [@thibaultCha](https://github.com/thibaultCha)
+* [OCaml](https://github.com/Khady/ocaml-argon2) by [@Khady](https://github.com/Khady)
+* [Python (native)](https://pypi.python.org/pypi/argon2), by [@flamewow](https://github.com/flamewow)
+* [Python (ffi)](https://pypi.python.org/pypi/argon2_cffi), by [@hynek](https://github.com/hynek)
+* [Python (ffi, with keyed hashing)](https://github.com/thusoy/porridge), by [@thusoy](https://github.com/thusoy)
+* [R](https://cran.r-project.org/package=argon2) by [@wrathematics](https://github.com/wrathematics)
+* [Ruby](https://github.com/technion/ruby-argon2) by [@technion](https://github.com/technion)
+* [Rust](https://github.com/quininer/argon2-rs) by [@quininer](https://github.com/quininer)
+* [Rust](https://docs.rs/argonautica/) by [@bcmyers](https://github.com/bcmyers/)
+* [C#/.NET CoreCLR](https://github.com/kmaragon/Konscious.Security.Cryptography) by [@kmaragon](https://github.com/kmaragon)
+* [Perl](https://github.com/Leont/crypt-argon2) by [@leont](https://github.com/Leont)
+* [mruby](https://github.com/Asmod4n/mruby-argon2) by [@Asmod4n](https://github.com/Asmod4n)
+* [Swift](https://github.com/ImKcat/CatCrypto) by [@ImKcat](https://github.com/ImKcat)
 
 
-## Useful commands for the nerds
+## Test suite
 
-**IMPORTANT NOTE:** the following instructions are meant for running eDEX from the latest unoptimized, unreleased, development version. If you'd like to get stable software instead, refer to [these](#how-do-i-get-it) instructions.
+There are two sets of test suites. One is a low level test for the hash
+function, the other tests the higher level API. Both of these are built and
+executed by running:
 
-#### Starting from source:
-on *nix systems (You'll need the Xcode command line tools on macOS):
-- clone the repository
-- `npm run install-linux`
-- `npm run start`
+`make test`
 
-on Windows:
-- start cmd or powershell **as administrator**
-- clone the repository
-- `npm run install-windows`
-- `npm run start`
+## Intellectual property
 
-#### Building
-Note: Due to native modules, you can only build targets for the host OS you are using.
+Except for the components listed below, the Argon2 code in this
+repository is copyright (c) 2015 Daniel Dinu, Dmitry Khovratovich (main
+authors), Jean-Philippe Aumasson and Samuel Neves, and dual licensed under the
+[CC0 License](https://creativecommons.org/about/cc0) and the
+[Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0). For more info
+see the LICENSE file.
 
-- `npm install` (NOT `install-linux` or `install-windows`)
-- `npm run build-linux` or `build-windows` or `build-darwin`
+The string encoding routines in [`src/encoding.c`](src/encoding.c) are
+copyright (c) 2015 Thomas Pornin, and under
+[CC0 License](https://creativecommons.org/about/cc0).
 
-The script will minify the source code, recompile native dependencies and create distributable assets in the `dist` folder.
+The BLAKE2 code in [`src/blake2/`](src/blake2) is copyright (c) Samuel
+Neves, 2013-2015, and under
+[CC0 License](https://creativecommons.org/about/cc0).
 
-#### Getting the bleeding edge
-If you're interested in running the latest in-development version but don't want to compile source code yourself, you can can get pre-built nightly binaries on [GitHub Actions](https://github.com/GitSquared/edex-ui/actions): click the latest commits, and download the artifacts bundle for your OS.
-
-## Credits
-eDEX-UI's source code was primarily written by me, [Squared](https://github.com/GitSquared). If you want to get in touch with me or find other projects I'm involved in, check out [my website](https://gaby.dev).
-
-[PixelyIon](https://github.com/PixelyIon) helped me get started with Windows compatibility and offered some precious advice when I started to work on this project seriously.
-
-[IceWolf](https://soundcloud.com/iamicewolf) composed the sound effects on v2.1.x and above. He makes really cool stuff, check out his music!
-
-## Thanks
-Of course, eDEX would never have existed if I hadn't stumbled upon the amazing work of [Seena](https://github.com/seenaburns) on [r/unixporn](https://reddit.com/r/unixporn).
-
-This project uses a bunch of open-source libraries, frameworks and tools, see [the full dependency graph](https://github.com/GitSquared/edex-ui/network/dependencies).
-
-I want to namely thank the developers behind [xterm.js](https://github.com/xtermjs/xterm.js), [systeminformation](https://github.com/sebhildebrandt/systeminformation) and [SmoothieCharts](https://github.com/joewalnes/smoothie).
-
-Huge thanks to [Rob "Arscan" Scanlon](https://github.com/arscan) for making the fantastic [ENCOM Globe](https://github.com/arscan/encom-globe), also inspired by the TRON: Legacy movie, and distributing it freely. His work really puts the icing on the cake.
-
-## Licensing
-
-Licensed under the [GPLv3.0](https://github.com/GitSquared/edex-ui/blob/master/LICENSE).
+All licenses are therefore GPL-compatible.
